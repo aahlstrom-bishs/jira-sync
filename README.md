@@ -4,32 +4,50 @@ Sync Jira tickets to Obsidian markdown and perform write operations back to Jira
 
 ## Quick Reference
 
-### Read Operations (Sync from Jira)
+### Read Operations (Display to Terminal)
 
 | Command | Description |
 |---------|-------------|
-| `python -m tools.jira test` | Test connection |
-| `python -m tools.jira ticket SR-1234` | Sync single ticket |
-| `python -m tools.jira tickets SR-1234 SR-1235` | Sync multiple tickets |
-| `python -m tools.jira epic SR-500` | Sync epic and children |
-| `python -m tools.jira jql "project = SR AND status = Ready"` | Sync via JQL |
-| `python -m tools.jira project SR --status "In Progress"` | Sync project tickets |
+| `python -m jira read:ticket SR-1234` | Display single ticket |
+| `python -m jira read:tickets SR-1234 SR-1235` | Display multiple tickets |
+| `python -m jira read:epic SR-500` | Display epic and children |
+| `python -m jira read:jql "project = SR AND status = Ready"` | Display JQL results |
+| `python -m jira read:project SR --status "In Progress"` | Display project tickets |
+| `python -m jira read:status SR-1234` | Show current status |
+| `python -m jira read:transitions SR-1234` | List available transitions |
+| `python -m jira read:comments SR-1234` | Display ticket comments |
+
+### Sync Operations (Save to Vault)
+
+| Command | Description |
+|---------|-------------|
+| `python -m jira sync:ticket SR-1234` | Sync single ticket |
+| `python -m jira sync:tickets SR-1234 SR-1235` | Sync multiple tickets |
+| `python -m jira sync:epic SR-500` | Sync epic and children |
+| `python -m jira sync:jql "project = SR AND status = Ready"` | Sync JQL results |
+| `python -m jira sync:project SR --status "In Progress"` | Sync project tickets |
 
 ### Write Operations (Push to Jira)
 
 | Command | Description |
 |---------|-------------|
-| `python -m tools.jira comment SR-1234 "Comment text"` | Add comment |
-| `python -m tools.jira status SR-1234 "In Dev"` | Update status |
-| `python -m tools.jira status SR-1234 --list` | List transitions |
-| `python -m tools.jira update SR-1234 --description "New text"` | Update description |
-| `python -m tools.jira link SR-1234 SR-5678 --type "Blocks"` | Link tickets |
-| `python -m tools.jira link --list-types` | List link types |
+| `python -m jira set:status SR-1234 "In Dev"` | Update status |
+| `python -m jira set:description SR-1234 "New text"` | Update description |
+| `python -m jira add:comment SR-1234 "Comment text"` | Add comment |
+| `python -m jira add:link SR-1234 SR-5678 --type "Blocks"` | Link tickets |
+
+### Admin Commands
+
+| Command | Description |
+|---------|-------------|
+| `python -m jira test` | Test connection |
+| `python -m jira init` | Initialize configuration |
+| `python -m jira setup` | Create specs/templates |
 
 ## Python API
 
 ```python
-from tools.jira import JiraSync, JiraClient
+from jira import JiraSync, JiraClient
 
 # Sync operations
 sync = JiraSync()
@@ -64,7 +82,7 @@ Credentials are loaded from `~/.jira/.env` (primary) with fallback to `./.env` i
 **Option A: Interactive setup (recommended)**
 
 ```bash
-python -m tools.jira init --interactive
+python -m jira init --interactive
 ```
 
 This will prompt for your URL, email, and API token, then create `~/.jira/.env`.
@@ -72,7 +90,7 @@ This will prompt for your URL, email, and API token, then create `~/.jira/.env`.
 **Option B: Command line**
 
 ```bash
-python -m tools.jira init --url "https://company.atlassian.net" --email "you@company.com" --token "your-token"
+python -m jira init --url "https://company.atlassian.net" --email "you@company.com" --token "your-token"
 ```
 
 **Option C: Manual .env file**
@@ -88,13 +106,13 @@ JIRA_API_TOKEN=your-api-token
 ### 3. Test Connection
 
 ```bash
-python -m tools.jira test
+python -m jira test
 ```
 
 ### 4. Initialize Vault Structure (Optional)
 
 ```bash
-python -m tools.jira setup
+python -m jira setup
 ```
 
 Creates `tickets/SPECS.md` and `tickets/templates/default.md`.
