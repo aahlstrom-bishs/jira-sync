@@ -1,0 +1,31 @@
+{
+  "jira_url": "https://your-company.atlassian.net",
+  "jira_email": "your-email@company.com",
+  "jira_cloud_id": "",
+  "vault_path": "C:/Users/you/notes/obsidian-vault",
+  "tickets_folder": "tickets",
+  "include_comments": true,
+  "include_attachments": true,
+  "include_links": true,
+  "status_tags": {
+    "To Do": "status/todo",
+    "In Progress": "status/in-progress",
+    "Ready": "status/ready",
+    "Done": "status/done",
+    "Closed": "status/closed"
+  },
+  "priority_tags": {
+    "Highest": "priority/highest",
+    "High": "priority/high",
+    "Medium": "priority/medium",
+    "Low": "priority/low",
+    "Lowest": "priority/lowest"
+  },
+  "type_tags": {
+    "Epic": "type/epic",
+    "Story": "type/story",
+    "Task": "type/task",
+    "Bug": "type/bug",
+    "Sub-task": "type/subtask"
+  }
+}
