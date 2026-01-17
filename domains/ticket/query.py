@@ -7,10 +7,10 @@ from datetime import datetime
 from jira.resources import Issue
 
 from .types import JiraTicket
-from ..lib.jira_client import get_client
+from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
 
 
 def fetch_ticket(key: str, config: "Config", expand: str = "changelog") -> JiraTicket:

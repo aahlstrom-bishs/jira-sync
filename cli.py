@@ -38,7 +38,7 @@ def discover_commands() -> dict[str, dict]:
     for domain in DOMAINS:
         try:
             # Import relative to this package
-            mod = importlib.import_module(f".{domain}.commands", package=__package__)
+            mod = importlib.import_module(f".domains.{domain}.commands", package=__package__)
             if hasattr(mod, "COMMANDS"):
                 commands.update(mod.COMMANDS)
         except ImportError as e:
@@ -76,8 +76,10 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
         subparser = subparsers.add_parser(name, help=cmd_config.get("help", ""))
 
         for arg in cmd_config.get("args", []):
-            # Handle positional vs optional arguments
-            arg_name = arg.get("name", arg.get("names"))
+            # Handle single name or multiple names (aliases)
+            names = arg.get("names") or [arg.get("name")]
+            if isinstance(names, str):
+                names = [names]
 
             # Build kwargs for add_argument
             kwargs = {}
@@ -85,12 +87,7 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
                 if key in arg:
                     kwargs[key] = arg[key]
 
-            if arg_name.startswith("-"):
-                # Optional argument
-                subparser.add_argument(arg_name, **kwargs)
-            else:
-                # Positional argument
-                subparser.add_argument(arg_name, **kwargs)
+            subparser.add_argument(*names, **kwargs)
 
     return parser
 

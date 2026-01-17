@@ -5,10 +5,10 @@ from typing import Optional, TYPE_CHECKING
 
 from ..ticket.types import JiraTicket
 from ..ticket.query import _issue_to_ticket
-from ..lib.jira_client import get_client
+from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
 
 
 def fetch_project_tickets(
@@ -16,6 +16,7 @@ def fetch_project_tickets(
     config: "Config",
     status: Optional[str] = None,
     issue_type: Optional[str] = None,
+    summary: Optional[str] = None,
     max_results: int = 50,
 ) -> list[JiraTicket]:
     """
@@ -37,6 +38,8 @@ def fetch_project_tickets(
         jql_parts.append(f'status = "{status}"')
     if issue_type:
         jql_parts.append(f'issuetype = "{issue_type}"')
+    if summary:
+        jql_parts.append(f'summary ~ "{summary}"')
 
     jql = " AND ".join(jql_parts) + " ORDER BY created DESC"
 

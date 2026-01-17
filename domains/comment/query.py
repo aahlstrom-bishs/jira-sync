@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 
 from .types import JiraComment
-from ..lib.jira_client import get_client
+from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
 
 
 def fetch_comments(key: str, config: "Config") -> list[JiraComment]:

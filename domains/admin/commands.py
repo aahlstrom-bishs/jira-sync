@@ -8,10 +8,10 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..lib.jira_client import get_client
+from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
 
 
 def handle_init(args) -> None:
@@ -46,6 +46,7 @@ def handle_init(args) -> None:
         env_template = """# Jira API Configuration
 JIRA_URL=https://your-domain.atlassian.net
 JIRA_EMAIL=your-email@example.com
+# https://id.atlassian.com/manage-profile/security/api-tokens
 JIRA_API_TOKEN=your-api-token
 """
         env_path.write_text(env_template)

@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 from ..ticket.types import JiraTicket
 from ..ticket.query import fetch_ticket, _issue_to_ticket
-from ..lib.jira_client import get_client
+from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
 
 
 def fetch_epic_children(epic_key: str, config: "Config") -> list[JiraTicket]:

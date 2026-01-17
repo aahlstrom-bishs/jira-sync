@@ -4,10 +4,10 @@ Status query operations - fetching transitions from Jira.
 from typing import TYPE_CHECKING
 
 from .types import Transition
-from ..lib.jira_client import get_client
+from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
 
 
 def fetch_transitions(key: str, config: "Config") -> list[Transition]:
