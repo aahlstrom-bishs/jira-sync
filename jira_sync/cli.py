@@ -59,7 +59,7 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
         Configured ArgumentParser
     """
     parser = argparse.ArgumentParser(
-        prog="jira-sync",
+        prog="jira",
         description="Sync Jira tickets to Obsidian vault",
     )
 
@@ -69,7 +69,7 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
     parser.add_argument("--vault", "-v", type=Path, help="Path to Obsidian vault")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
 
-    subparsers = parser.add_subparsers(dest="command", help="Commands")
+    subparsers = parser.add_subparsers(dest="command", metavar="COMMAND", help="Commands")
 
     # Register each command
     for name, cmd_config in commands.items():
