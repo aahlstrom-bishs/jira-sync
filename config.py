@@ -87,25 +87,35 @@ class Config:
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "Config":
         """
-        Load configuration with fallback priority:
-        1. Specified config file
-        2. .jira.json in current directory
-        3. Environment variables
+        Load configuration with layered priority:
+        1. Specified config file (if provided)
+        2. Otherwise: ~/.jira/config.json (global defaults)
+           -> merged with {cwd}/.jira/config.json (project overrides)
+           -> merged with environment variables (final overrides)
         """
-        # Try specified config file
+        # If explicit config path provided, use it directly
         if config_path and config_path.exists():
-            return cls.from_file(config_path)
-
-        # Try default config file
-        default_config = Path.cwd() / ".jira.json"
-        if default_config.exists():
-            config = cls.from_file(default_config)
-            # Override with env vars if present
+            config = cls.from_file(config_path)
             config._apply_env_overrides()
             return config
 
-        # Fall back to environment variables
-        return cls.from_env()
+        # Start with defaults
+        config = cls()
+
+        # Layer 1: Global defaults from ~/.jira/config.json
+        home_config = Path.home() / ".jira" / "config.json"
+        if home_config.exists():
+            config = cls.from_file(home_config)
+
+        # Layer 2: Project overrides from {cwd}/.jira/config.json
+        cwd_config = Path.cwd() / ".jira" / "config.json"
+        if cwd_config.exists():
+            config._apply_file_overrides(cwd_config)
+
+        # Layer 3: Environment variable overrides (from .env files already loaded)
+        config._apply_env_overrides()
+
+        return config
 
     def _apply_env_overrides(self):
         """Apply environment variable overrides to existing config."""
@@ -118,9 +128,38 @@ class Config:
         if os.getenv("JIRA_CLOUD_ID"):
             self.jira_cloud_id = os.getenv("JIRA_CLOUD_ID")
 
+    def _apply_file_overrides(self, config_path: Path):
+        """Apply overrides from a config file (only non-empty values)."""
+        with open(config_path, "r") as f:
+            data = json.load(f)
+
+        if data.get("jira_url"):
+            self.jira_url = data["jira_url"]
+        if data.get("jira_email"):
+            self.jira_email = data["jira_email"]
+        if data.get("jira_cloud_id"):
+            self.jira_cloud_id = data["jira_cloud_id"]
+        if data.get("vault_path"):
+            self.vault_path = Path(data["vault_path"])
+        if data.get("tickets_folder"):
+            self.tickets_folder = data["tickets_folder"]
+        if "include_comments" in data:
+            self.include_comments = data["include_comments"]
+        if "include_attachments" in data:
+            self.include_attachments = data["include_attachments"]
+        if "include_links" in data:
+            self.include_links = data["include_links"]
+        if data.get("status_tags"):
+            self.status_tags.update(data["status_tags"])
+        if data.get("priority_tags"):
+            self.priority_tags.update(data["priority_tags"])
+        if data.get("type_tags"):
+            self.type_tags.update(data["type_tags"])
+
     def save(self, config_path: Optional[Path] = None):
         """Save configuration to a JSON file."""
-        path = config_path or Path.cwd() / ".jira.json"
+        path = config_path or (Path.home() / ".jira" / "config.json")
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         data = {
             "jira_url": self.jira_url,

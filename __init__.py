@@ -15,16 +15,16 @@ from dotenv import load_dotenv
 
 
 def _load_env_files():
-    """Load .env files from current directory falling back to user home."""
-    # Current working directory .env (primary)
-    cwd_env = Path.cwd() / ".env"
-    if cwd_env.exists():
-        load_dotenv(cwd_env, override=True)
-
-    # User home directory .env (fallback)
+    """Load .env files: global defaults from ~/.jira/, then project overrides from {cwd}/.jira/."""
+    # Global defaults from user home directory
     home_env = Path.home() / ".jira" / ".env"
     if home_env.exists():
         load_dotenv(home_env)
+
+    # Project-specific overrides from {cwd}/.jira/
+    cwd_env = Path.cwd() / ".jira" / ".env"
+    if cwd_env.exists():
+        load_dotenv(cwd_env, override=True)
 
 
 _load_env_files()
