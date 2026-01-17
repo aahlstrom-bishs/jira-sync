@@ -16,20 +16,32 @@ def handle_read_project(config: "Config", args) -> None:
     """
     Display project tickets as JSON.
 
-    Command: read:project <key> [--status STATUS] [--type TYPE] [--title TEXT] [--limit N]
+    Command: read:project [key] [--status STATUS] [--type TYPE] [--title TEXT] [--limit N] [--include-all]
     """
+    # Use config default if key not provided
+    key = getattr(args, "key", None) or config.get_default("project", "key")
+    if not key:
+        print("Error: No project key provided and no default configured.")
+        print("Set defaults.project.key in config or pass key as argument.")
+        return
+
     status = getattr(args, "status", None)
     issue_type = getattr(args, "type", None)
     summary = getattr(args, "title", None)
-    max_results = getattr(args, "limit", 50)
+    max_results = getattr(args, "limit", None) or config.get_default("jql", "max_results", 50)
+    include_all = getattr(args, "include_all", False)
+
+    # Build excluded statuses list
+    excluded_statuses = [] if include_all else config.get_default("jql", "excluded_statuses", [])
 
     tickets = fetch_project_tickets(
-        args.key,
+        key,
         config,
         status=status,
         issue_type=issue_type,
         summary=summary,
         max_results=max_results,
+        excluded_statuses=excluded_statuses,
     )
     output = [ticket.to_dict() for ticket in tickets]
     print(json.dumps(output, indent=2, default=str))
@@ -41,11 +53,12 @@ COMMANDS = {
         "handler": handle_read_project,
         "help": "Display project tickets as JSON",
         "args": [
-            {"name": "key", "help": "Project key (e.g., SR)"},
+            {"name": "key", "nargs": "?", "help": "Project key (e.g., SR). Uses default if not provided."},
             {"name": "--status", "help": "Filter by status"},
             {"name": "--type", "help": "Filter by issue type"},
             {"names": ["--title", "--summary"], "help": "Filter by title/summary text"},
-            {"name": "--limit", "type": int, "default": 50, "help": "Max results (default 50)"},
+            {"name": "--limit", "type": int, "help": "Max results (uses config default)"},
+            {"name": "--include-all", "action": "store_true", "help": "Include all statuses (ignore excluded_statuses)"},
         ],
     },
 }

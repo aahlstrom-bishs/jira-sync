@@ -27,5 +27,18 @@
     "Task": "type/task",
     "Bug": "type/bug",
     "Sub-task": "type/subtask"
+  },
+  "defaults": {
+    "project": {
+      "key": "SR"
+    },
+    "jql": {
+      "max_results": 50,
+      "excluded_statuses": ["Done", "Closed"]
+    }
+  },
+  "saved_queries": {
+    "my_open": "assignee = currentUser() AND status != Done",
+    "sprint": "project = SR AND sprint in openSprints()"
   }
 }

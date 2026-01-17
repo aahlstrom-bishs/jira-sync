@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jira-sync"
+version = "2.0.0"
+description = "Sync Jira tickets to Obsidian markdown"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "jira>=3.5.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+jira = "jira_sync.cli:main"

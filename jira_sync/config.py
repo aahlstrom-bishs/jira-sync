@@ -32,6 +32,15 @@ class Config:
     include_links: bool = True
     max_description_length: int = 0  # 0 = no limit
 
+    # Domain defaults
+    defaults: dict = field(default_factory=lambda: {
+        "project": {},
+        "jql": {"max_results": 50, "excluded_statuses": []},
+    })
+
+    # Saved JQL queries
+    saved_queries: dict = field(default_factory=dict)
+
     # Default Tag mappings (Jira status -> Obsidian tag)
     status_tags: dict = field(default_factory=lambda: {
         "To Do": "status/todo",
@@ -155,6 +164,13 @@ class Config:
             self.priority_tags.update(data["priority_tags"])
         if data.get("type_tags"):
             self.type_tags.update(data["type_tags"])
+        if data.get("defaults"):
+            for domain, values in data["defaults"].items():
+                if domain not in self.defaults:
+                    self.defaults[domain] = {}
+                self.defaults[domain].update(values)
+        if data.get("saved_queries"):
+            self.saved_queries.update(data["saved_queries"])
 
     def save(self, config_path: Optional[Path] = None):
         """Save configuration to a JSON file."""
@@ -174,6 +190,8 @@ class Config:
             "status_tags": self.status_tags,
             "priority_tags": self.priority_tags,
             "type_tags": self.type_tags,
+            "defaults": self.defaults,
+            "saved_queries": self.saved_queries,
         }
 
         with open(path, "w") as f:
@@ -211,3 +229,19 @@ class Config:
     def get_type_tag(self, issue_type: str) -> str:
         """Get the Obsidian tag for a Jira issue type."""
         return self.type_tags.get(issue_type, f"type/{issue_type.lower().replace(' ', '-')}")
+
+    def get_default(self, domain: str, key: str, fallback=None):
+        """Get a domain-specific default value."""
+        return self.defaults.get(domain, {}).get(key, fallback)
+
+    def get_saved_query(self, name: str) -> Optional[str]:
+        """Get a saved JQL query by name."""
+        return self.saved_queries.get(name)
+
+    def build_exclusion_clause(self) -> str:
+        """Build JQL clause for excluded statuses."""
+        excluded = self.get_default("jql", "excluded_statuses", [])
+        if not excluded:
+            return ""
+        quoted = ', '.join(f'"{s}"' for s in excluded)
+        return f"status NOT IN ({quoted})"
