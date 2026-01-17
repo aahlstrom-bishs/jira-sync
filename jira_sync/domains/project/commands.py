@@ -34,6 +34,16 @@ def handle_read_project(config: "Config", args) -> None:
     # Build excluded statuses list
     excluded_statuses = [] if include_all else config.get_default("jql", "excluded_statuses", [])
 
+    # Get user filter
+    all_users = getattr(args, "all_users", False)
+    user_arg = getattr(args, "user", None)
+    if all_users:
+        assignee = None
+    elif user_arg:
+        assignee = user_arg
+    else:
+        assignee = config.get_default("jql", "user", "currentUser()")
+
     tickets = fetch_project_tickets(
         key,
         config,
@@ -42,8 +52,17 @@ def handle_read_project(config: "Config", args) -> None:
         summary=summary,
         max_results=max_results,
         excluded_statuses=excluded_statuses,
+        assignee=assignee,
     )
-    output = [ticket.to_dict() for ticket in tickets]
+
+    list_only = getattr(args, "list", False)
+    if list_only:
+        output = [
+            {"key": ticket.key, "status": ticket.status, "summary": ticket.summary}
+            for ticket in tickets
+        ]
+    else:
+        output = [ticket.to_dict() for ticket in tickets]
     print(json.dumps(output, indent=2, default=str))
 
 
@@ -59,6 +78,9 @@ COMMANDS = {
             {"names": ["--title", "--summary"], "help": "Filter by title/summary text"},
             {"name": "--limit", "type": int, "help": "Max results (uses config default)"},
             {"name": "--include-all", "action": "store_true", "help": "Include all statuses (ignore excluded_statuses)"},
+            {"name": "--list", "action": "store_true", "help": "Show only key, status, and summary"},
+            {"name": "--user", "help": "Filter by user (default: from config or currentUser())"},
+            {"name": "--all-users", "action": "store_true", "help": "Show issues for all users"},
         ],
     },
 }

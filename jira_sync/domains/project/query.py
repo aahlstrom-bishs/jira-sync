@@ -19,6 +19,7 @@ def fetch_project_tickets(
     summary: Optional[str] = None,
     max_results: int = 50,
     excluded_statuses: Optional[list[str]] = None,
+    assignee: Optional[str] = None,
 ) -> list[JiraTicket]:
     """
     Get tickets from a project with optional filters.
@@ -30,6 +31,7 @@ def fetch_project_tickets(
         issue_type: Optional issue type filter
         max_results: Maximum number of results to return
         excluded_statuses: List of statuses to exclude from results
+        assignee: User filter - "currentUser()" for JQL function, user ID string, or None for no filter
 
     Returns:
         List of JiraTicket objects
@@ -42,6 +44,11 @@ def fetch_project_tickets(
         jql_parts.append(f'issuetype = "{issue_type}"')
     if summary:
         jql_parts.append(f'summary ~ "{summary}"')
+    if assignee:
+        if assignee == "currentUser()":
+            jql_parts.append("assignee = currentUser()")
+        else:
+            jql_parts.append(f'assignee = "{assignee}"')
     if excluded_statuses:
         quoted = ', '.join(f'"{s}"' for s in excluded_statuses)
         jql_parts.append(f"status NOT IN ({quoted})")

@@ -30,15 +30,18 @@
   },
   "defaults": {
     "project": {
+      "user": "currentUser()",
       "key": "SR"
     },
     "jql": {
       "max_results": 50,
-      "excluded_statuses": ["Done", "Closed"]
+      "excluded_statuses": ["Done", "Closed"],
+      "user": "currentUser()"
     }
   },
   "saved_queries": {
-    "my_open": "assignee = currentUser() AND status != Done",
-    "sprint": "project = SR AND sprint in openSprints()"
+    "my_open": "status != Done AND status != Open",
+    "in_dev": "status = \"In Development\"",
+    "queued": "status = Ready"
   }
 }
