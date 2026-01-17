@@ -17,35 +17,47 @@ pip install -e .
 
 ### Read Operations
 
-All read commands output JSON to stdout.
+All read commands output JSON to stdout. Commands have shortcuts (e.g., `jira project` = `jira read:project`).
 
-| Command | Description |
-|---------|-------------|
-| `jira read:ticket SR-1234` | Display single ticket |
-| `jira read:tickets SR-1234 SR-1235` | Display multiple tickets |
-| `jira read:epic SR-500` | Display epic and children |
-| `jira read:jql "project = SR AND status = Ready"` | Execute JQL query |
-| `jira read:project SR --status "In Progress"` | Display project tickets |
-| `jira read:transitions SR-1234` | List available transitions |
-| `jira read:comments SR-1234` | Display ticket comments |
+| Command | Shortcut | Description |
+|---------|----------|-------------|
+| `jira read:ticket SR-1234` | `jira ticket SR-1234` | Display single ticket |
+| `jira read:tickets SR-1234 SR-1235` | `jira tickets SR-1234 SR-1235` | Display multiple tickets |
+| `jira read:epic SR-500` | `jira epic SR-500` | Display epic and children |
+| `jira read:jql "project = SR"` | `jira jql "project = SR"` | Execute JQL query |
+| `jira read:project SR` | `jira project SR` | Display project tickets |
+| `jira read:transitions SR-1234` | `jira transitions SR-1234` | List available transitions |
+| `jira read:comments SR-1234` | `jira comments SR-1234` | Display ticket comments |
+
+#### User Filtering
+
+By default, results are filtered to the current user (configurable via `defaults.jql.user`).
+
+```bash
+jira project SR                        # Filter to current user (default)
+jira project SR --all-users            # Show all users
+jira project SR --user john.doe        # Filter to specific user
+```
 
 #### JQL Options
 
 ```bash
-jira read:jql "project = SR" --limit 100           # Limit results
-jira read:jql "project = SR" --include-all         # Include excluded statuses
-jira read:jql "project = SR" --save my-query       # Save query for reuse
-jira read:jql my-query                             # Use saved query
+jira jql "project = SR" --limit 100           # Limit results
+jira jql "project = SR" --include-all         # Include excluded statuses
+jira jql "project = SR" --all-users           # Show all users
+jira jql "project = SR" --save my-query       # Save query for reuse
+jira jql my-query                             # Use saved query
 ```
 
 #### Project Options
 
 ```bash
-jira read:project SR --status "In Progress"        # Filter by status
-jira read:project SR --type Story                  # Filter by issue type
-jira read:project SR --title "search text"         # Filter by title
-jira read:project SR --limit 50                    # Limit results
-jira read:project SR --include-all                 # Include excluded statuses
+jira project SR --status "In Progress"        # Filter by status
+jira project SR --type Story                  # Filter by issue type
+jira project SR --title "search text"         # Filter by title
+jira project SR --limit 50                    # Limit results
+jira project SR --include-all                 # Include excluded statuses
+jira project SR --list                        # Show only key, status, summary
 ```
 
 ### Sync Operations (Coming Soon)
@@ -168,6 +180,35 @@ TICKETS_FOLDER=tickets
 | `JIRA_CLOUD_ID` | Cloud ID (optional) |
 | `VAULT_PATH` | Path to Obsidian vault |
 | `TICKETS_FOLDER` | Folder name for tickets (default: `tickets`) |
+
+### config.json Settings
+
+```json
+{
+  "defaults": {
+    "project": {
+      "key": "SR"
+    },
+    "jql": {
+      "max_results": 50,
+      "excluded_statuses": ["Done", "Closed"],
+      "user": "currentUser()"
+    }
+  },
+  "saved_queries": {
+    "my_open": "assignee = currentUser() AND status != Done",
+    "sprint": "project = SR AND sprint in openSprints()"
+  }
+}
+```
+
+| Setting | Description |
+|---------|-------------|
+| `defaults.project.key` | Default project key when not specified |
+| `defaults.jql.max_results` | Default result limit (default: 50) |
+| `defaults.jql.excluded_statuses` | Statuses to exclude by default |
+| `defaults.jql.user` | Default user filter: `"currentUser()"` or a specific user ID |
+| `saved_queries` | Named JQL queries for reuse |
 
 ## Output Format (Coming Soon)
 

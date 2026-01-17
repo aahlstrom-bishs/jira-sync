@@ -92,6 +92,16 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
     return parser
 
 
+def get_read_aliases(commands: dict) -> dict[str, str]:
+    """Build mapping of aliases to read: commands (e.g., 'ticket' -> 'read:ticket')."""
+    aliases = {}
+    for cmd_name in commands:
+        if cmd_name.startswith("read:"):
+            alias = cmd_name[5:]  # Strip "read:" prefix
+            aliases[alias] = cmd_name
+    return aliases
+
+
 def load_config(args) -> Config:
     """Load configuration from args and environment."""
     config = Config.load(getattr(args, "config", None))
@@ -106,6 +116,16 @@ def main():
     """Main entry point."""
     # Discover commands
     commands = discover_commands()
+
+    # Build alias map and substitute in sys.argv before parsing
+    aliases = get_read_aliases(commands)
+
+    # Find and substitute alias in argv (first non-option arg after script name)
+    for i, arg in enumerate(sys.argv[1:], start=1):
+        if not arg.startswith("-"):
+            if arg in aliases:
+                sys.argv[i] = aliases[arg]
+            break
 
     # Build parser
     parser = build_parser(commands)
