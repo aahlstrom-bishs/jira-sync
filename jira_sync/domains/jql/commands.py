@@ -27,6 +27,11 @@ def handle_read_jql(config: "Config", args) -> None:
     if saved:
         query = saved
 
+    # Save query if --save is provided (before adding exclusion clauses)
+    if getattr(args, "save", None):
+        config.saved_queries[args.save] = query
+        config.save()
+
     max_results = getattr(args, "limit", None) or config.get_default("jql", "max_results", 50)
     include_all = getattr(args, "include_all", False)
 
@@ -50,6 +55,7 @@ COMMANDS = {
             {"name": "query", "help": "JQL query string or saved query name"},
             {"name": "--limit", "type": int, "help": "Max results (uses config default)"},
             {"name": "--include-all", "action": "store_true", "help": "Include all statuses (ignore excluded_statuses)"},
+            {"name": "--save", "help": "Save query with this name for future use"},
         ],
     },
 }
