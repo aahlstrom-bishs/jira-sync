@@ -23,6 +23,7 @@ DOMAINS = [
     "project",
     "jql",
     "admin",
+    "time",
 ]
 
 
@@ -71,8 +72,8 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND", help="Commands")
 
-    # Register each command
-    for name, cmd_config in commands.items():
+    # Register each command (sorted to group by action prefix)
+    for name, cmd_config in sorted(commands.items()):
         subparser = subparsers.add_parser(name, help=cmd_config.get("help", ""))
 
         for arg in cmd_config.get("args", []):
