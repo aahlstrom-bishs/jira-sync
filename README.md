@@ -1,6 +1,6 @@
 # Jira Sync
 
-A Python CLI tool for reading Jira tickets and syncing them to Obsidian markdown.
+A Python CLI tool for managing Jira tickets
 
 ## Installation
 
@@ -13,7 +13,57 @@ For development:
 pip install -e .
 ```
 
-## Example Workflow
+## Example - Finding Tickets
+
+``` bash
+jira project --title "ROSM" --list
+```
+``` json
+[
+  {
+    "key": "SR-3406",
+    "status": "Ready",
+    "summary": "ROSM - RO DETAIL - Jobs Table"
+  },
+  {
+    "key": "SR-3405",
+    "status": "Ready",
+    "summary": "ROSM - SR DETAIL - Jobs Table"
+  },
+  {
+    "key": "SR-3404",
+    "status": "Ready",
+    "summary": "ROSM - Images"
+  },
+  ...
+]
+```
+
+``` bash
+jira project --title "parts" --list
+```
+``` json
+[
+  {
+    "key": "SR-3543",
+    "status": "Open",
+    "summary": "Part Manager refresh issue"
+  },
+  {
+    "key": "SR-3457",
+    "status": "Open",
+    "summary": "Update parts verification url"
+  },
+  {
+    "key": "SR-3398",
+    "status": "Ready",
+    "summary": "ROSM - SR DETAIL - Parts"
+  },
+  ...
+]
+```
+
+## Example - Workflow
 
 ```bash
 # Create an epic for a new feature
@@ -200,7 +250,7 @@ jira set:labels SR-1234 bug critical     # Replace with new labels
 |--------|-------------|
 | `--config, -c` | Path to config file |
 | `--env, -e` | Path to .env file |
-| `--vault, -v` | Path to Obsidian vault |
+| `--vault, -v` | Path to vault |
 | `--verbose` | Enable verbose output |
 
 ## Python API
@@ -273,7 +323,7 @@ JIRA_EMAIL=your-email@company.com
 JIRA_API_TOKEN=your-api-token
 
 # Optional
-VAULT_PATH=/path/to/obsidian/vault
+VAULT_PATH=/path/to/vault
 TICKETS_FOLDER=tickets
 ```
 
@@ -285,7 +335,7 @@ TICKETS_FOLDER=tickets
 | `JIRA_EMAIL` | Your Jira email |
 | `JIRA_API_TOKEN` | Your API token |
 | `JIRA_CLOUD_ID` | Cloud ID (optional) |
-| `VAULT_PATH` | Path to Obsidian vault |
+| `VAULT_PATH` | Path to vault |
 | `TICKETS_FOLDER` | Folder name for tickets (default: `tickets`) |
 
 ### config.json Settings
