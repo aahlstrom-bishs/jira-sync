@@ -13,6 +13,49 @@ For development:
 pip install -e .
 ```
 
+## Example Workflow
+
+```bash
+# Create an epic for a new feature
+jira create:epic SR "User Authentication System"
+# → {"success": true, "key": "SR-100", ...}
+
+# Create tasks under the epic
+jira create:ticket SR "Implement login endpoint" --parent SR-100 --type Task
+jira create:ticket SR "Add password reset flow" --parent SR-100 --priority High
+
+# Read the epic and its children
+jira epic SR-100
+
+# Add context to a ticket
+jira add:comment SR-101 "Using OAuth2 for this implementation"
+jira add:label SR-101 backend
+
+# Update ticket status and assignment
+jira set:status SR-101 "In Progress"
+jira set:assignee SR-101 john.doe@example.com
+
+# Log work
+jira add:worklog SR-101 "2h" --comment "Initial API scaffolding"
+
+# Query your queued tickets
+jira project SR --status "Ready" --list
+
+# Run JQL queries
+jira jql "project = SR AND status = 'In Development' ORDER BY priority DESC"
+
+## JQL - Save a query for reuse
+jira jql "project = SR"
+### `EXECUTING: ((project = SR) AND assignee = currentUser()) AND status NOT IN ("Done", "Closed")`
+
+jira jql "project = SR" --user "me" --list --save my_sprint
+### Config saved to ~\.jira\config.json
+### `EXECUTING: ((project = SR) AND assignee = currentUser()) AND status NOT IN ("Done", "Closed")`
+
+## JQL - Run saved query
+jira jql my_sprint --list
+```
+
 ## Quick Reference
 
 ### Read Operations
@@ -60,6 +103,79 @@ jira project SR --include-all                 # Include excluded statuses
 jira project SR --list                        # Show only key, status, summary
 ```
 
+### Create Operations
+
+| Command | Description |
+|---------|-------------|
+| `jira create:ticket PROJECT "Summary"` | Create a new ticket |
+| `jira create:epic PROJECT "Summary"` | Create a new epic |
+
+#### create:ticket Options
+
+```bash
+jira create:ticket SR "Fix login bug"                    # Basic ticket
+jira create:ticket SR "New feature" --type Story         # Specify type
+jira create:ticket SR "Task" --assignee user@example.com # With assignee
+jira create:ticket SR "Child task" --parent SR-100       # Under an epic
+jira create:ticket SR "Urgent" --priority High --labels bug urgent
+```
+
+| Option | Description |
+|--------|-------------|
+| `--type` | Issue type (default: Task) |
+| `--description` | Description text |
+| `--assignee` | Assignee |
+| `--priority` | Priority level |
+| `--labels` | Labels (space-separated) |
+| `--parent` | Parent epic key |
+
+#### create:epic Options
+
+| Option | Description |
+|--------|-------------|
+| `--description` | Description text |
+| `--labels` | Labels (space-separated) |
+
+### Add Operations
+
+| Command | Description |
+|---------|-------------|
+| `jira add:comment SR-1234 "Comment text"` | Add a comment to a ticket |
+| `jira add:label SR-1234 my-label` | Add a label to a ticket |
+| `jira add:link SR-1234 SR-5678` | Link two tickets |
+| `jira add:worklog SR-1234 "1h 30m"` | Log time on a ticket |
+
+#### add:link Options
+
+```bash
+jira add:link SR-1234 SR-5678                  # Default: Relates
+jira add:link SR-1234 SR-5678 --type Blocks    # SR-1234 blocks SR-5678
+```
+
+Common link types: `Blocks`, `Relates`, `Duplicates`, `Clones`
+
+#### add:worklog Options
+
+```bash
+jira add:worklog SR-1234 "2h"                          # Log 2 hours
+jira add:worklog SR-1234 "1h 30m" --comment "Code review"
+```
+
+### Set Operations
+
+| Command | Description |
+|---------|-------------|
+| `jira set:status SR-1234 "In Progress"` | Transition ticket to new status |
+| `jira set:assignee SR-1234 user@example.com` | Assign ticket to user |
+| `jira set:priority SR-1234 High` | Set ticket priority |
+| `jira set:labels SR-1234 label1 label2` | Replace all labels on a ticket |
+
+```bash
+jira set:assignee SR-1234 none           # Unassign ticket
+jira set:labels SR-1234                  # Clear all labels
+jira set:labels SR-1234 bug critical     # Replace with new labels
+```
+
 ### Sync Operations (Coming Soon)
 
 | Command | Description |
@@ -69,15 +185,6 @@ jira project SR --list                        # Show only key, status, summary
 | `jira sync:epic SR-500` | Sync epic and children |
 | `jira sync:jql "project = SR"` | Sync JQL results |
 | `jira sync:project SR` | Sync project tickets |
-
-### Write Operations (Coming Soon)
-
-| Command | Description |
-|---------|-------------|
-| `jira set:status SR-1234 "In Dev"` | Update status |
-| `jira set:description SR-1234 "New text"` | Update description |
-| `jira add:comment SR-1234 "Comment text"` | Add comment |
-| `jira add:link SR-1234 SR-5678 --type "Blocks"` | Link tickets |
 
 ### Admin Commands
 
@@ -187,16 +294,17 @@ TICKETS_FOLDER=tickets
 {
   "defaults": {
     "project": {
-      "key": "SR"
+      "key": "SR",
+      "user": "me"
     },
     "jql": {
       "max_results": 50,
       "excluded_statuses": ["Done", "Closed"],
-      "user": "currentUser()"
+      "user": "me"
     }
   },
   "saved_queries": {
-    "my_open": "assignee = currentUser() AND status != Done",
+    "my_open": "status != Done",
     "sprint": "project = SR AND sprint in openSprints()"
   }
 }
@@ -207,7 +315,7 @@ TICKETS_FOLDER=tickets
 | `defaults.project.key` | Default project key when not specified |
 | `defaults.jql.max_results` | Default result limit (default: 50) |
 | `defaults.jql.excluded_statuses` | Statuses to exclude by default |
-| `defaults.jql.user` | Default user filter: `"currentUser()"` or a specific user ID |
+| `defaults.jql.user` | Default user filter: `me` or `current` or a specific user ID |
 | `saved_queries` | Named JQL queries for reuse |
 
 ## Output Format (Coming Soon)
