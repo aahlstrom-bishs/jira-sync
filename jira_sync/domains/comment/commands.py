@@ -4,6 +4,7 @@ Comment domain commands.
 Exports COMMANDS dict for CLI discovery.
 """
 import json
+import sys
 from typing import TYPE_CHECKING
 
 from .query import fetch_comments
@@ -11,6 +12,20 @@ from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
     from ...config import Config
+
+
+def get_comment_body(args) -> str:
+    """Resolve comment body from args, file, or stdin."""
+    # File flag takes precedence
+    if getattr(args, 'file', None):
+        with open(args.file, 'r') as f:
+            return f.read().strip()
+
+    # Stdin: explicit '-' or piped input with no body
+    if args.body == '-' or (args.body is None and not sys.stdin.isatty()):
+        return sys.stdin.read().strip()
+
+    return args.body or ''
 
 
 def handle_read_comments(config: "Config", args) -> None:
@@ -25,13 +40,14 @@ def handle_read_comments(config: "Config", args) -> None:
 
 
 def handle_add_comment(config: "Config", args) -> None:
-    """
-    Add a comment to a ticket.
+    """Add a comment to a ticket."""
+    body = get_comment_body(args)
+    if not body:
+        print(json.dumps({"error": "No comment body provided"}, indent=2))
+        sys.exit(1)
 
-    Command: add:comment <key> <body>
-    """
     conn = get_client(config)
-    comment = conn.client.add_comment(args.key, args.body)
+    comment = conn.client.add_comment(args.key, body)
     print(json.dumps({
         "success": True,
         "key": args.key,
@@ -54,7 +70,8 @@ COMMANDS = {
         "help": "Add a comment to a ticket",
         "args": [
             {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
-            {"name": "body", "help": "Comment text"},
+            {"name": "body", "nargs": "?", "help": "Comment text (use - for stdin)"},
+            {"names": ["--file", "-f"], "help": "Read comment from file"},
         ],
     },
 }

@@ -81,6 +81,14 @@ jira epic SR-100
 jira add:comment SR-101 "Using OAuth2 for this implementation"
 jira add:label SR-101 backend
 
+# Add a multi-line comment
+jira add:comment SR-101 - <<EOF
+Implementation notes:
+- Using JWT tokens with 1h expiry
+- Refresh tokens stored in httpOnly cookies
+- Rate limiting: 5 attempts per minute
+EOF
+
 # Update ticket status and assignment
 jira set:status SR-101 "In Progress"
 jira set:assignee SR-101 john.doe@example.com
@@ -194,6 +202,24 @@ jira create:ticket SR "Urgent" --priority High --labels bug urgent
 | `jira add:label SR-1234 my-label` | Add a label to a ticket |
 | `jira add:link SR-1234 SR-5678` | Link two tickets |
 | `jira add:worklog SR-1234 "1h 30m"` | Log time on a ticket |
+
+#### add:comment Options
+
+```bash
+jira add:comment SR-1234 "Single line"             # Direct argument
+jira add:comment SR-1234 --file comment.txt        # From file
+jira add:comment SR-1234 -f comment.txt            # Short form
+echo "Piped text" | jira add:comment SR-1234 -     # From stdin
+jira add:comment SR-1234 - <<EOF                   # Heredoc
+Multi-line
+comment text
+EOF
+```
+
+| Option | Description |
+|--------|-------------|
+| `body` | Comment text (use `-` for stdin) |
+| `--file, -f` | Read comment body from file |
 
 #### add:link Options
 
