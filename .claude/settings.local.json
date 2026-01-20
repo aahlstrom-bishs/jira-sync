@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(jira --help:*)"
+      "Bash(jira --help:*)",
+      "Bash(jira test)"
     ]
   }
 }

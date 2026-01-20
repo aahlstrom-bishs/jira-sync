@@ -37,12 +37,17 @@ def handle_read_project(config: "Config", args) -> None:
     # Get user filter
     all_users = getattr(args, "all_users", False)
     user_arg = getattr(args, "user", None)
+
+    # Alias "me" to currentUser() for shell-friendliness
+    if user_arg and user_arg.lower() in ("me", "current"):
+        user_arg = "currentUser()"
+
     if all_users:
         assignee = None
     elif user_arg:
         assignee = user_arg
     else:
-        assignee = config.get_default("jql", "user", "currentUser()")
+        assignee = config.get_default("project", "user", "currentUser()")
 
     tickets = fetch_project_tickets(
         key,
@@ -79,7 +84,7 @@ COMMANDS = {
             {"name": "--limit", "type": int, "help": "Max results (uses config default)"},
             {"name": "--include-all", "action": "store_true", "help": "Include all statuses (ignore excluded_statuses)"},
             {"name": "--list", "action": "store_true", "help": "Show only key, status, and summary"},
-            {"name": "--user", "help": "Filter by user (default: from config or currentUser())"},
+            {"name": "--user", "help": "Filter by user ('me' = currentUser(), default: from config)"},
             {"name": "--all-users", "action": "store_true", "help": "Show issues for all users"},
         ],
     },
