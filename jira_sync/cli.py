@@ -74,7 +74,12 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
 
     # Register each command (sorted to group by action prefix)
     for name, cmd_config in sorted(commands.items()):
-        subparser = subparsers.add_parser(name, help=cmd_config.get("help", ""))
+        subparser = subparsers.add_parser(
+            name,
+            help=cmd_config.get("help", ""),
+            epilog=cmd_config.get("epilog"),
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+        )
 
         for arg in cmd_config.get("args", []):
             # Handle single name or multiple names (aliases)

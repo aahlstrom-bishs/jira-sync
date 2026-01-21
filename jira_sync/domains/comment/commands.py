@@ -68,6 +68,28 @@ COMMANDS = {
     "add:comment": {
         "handler": handle_add_comment,
         "help": "Add a comment to a ticket",
+        "epilog": """Tips:
+  Multi-line comments: Use heredoc syntax or --file flag
+    jira add:comment PROJ-123 <<'EOF'
+    Line 1
+    Line 2
+    EOF
+
+    jira add:comment PROJ-123 --file comment.txt
+
+  Formatting: Use Jira wiki syntax, not Markdown
+    *bold*           instead of **bold**
+    _italic_         instead of *italic*
+    -strikethrough-  instead of ~~strikethrough~~
+    +underline+      (no markdown equivalent)
+    {{monospace}}    instead of `code`
+    {code}...{code}  instead of ```code blocks```
+    [link|https://]  instead of [link](https://)
+    h1. Heading      instead of # Heading
+    * bullet         instead of - bullet
+    # numbered       instead of 1. numbered
+    {quote}...{quote}  for block quotes
+    {noformat}...{noformat}  for preformatted text""",
         "args": [
             {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
             {"name": "body", "nargs": "?", "help": "Comment text (use - for stdin)"},
