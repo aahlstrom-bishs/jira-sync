@@ -24,7 +24,7 @@ def handle_read_epic(config: "Config", args) -> None:
     list_only = getattr(args, "list", False)
     if list_only:
         children = [
-            {"key": child.key, "status": child.status, "summary": child.summary}
+            {"key": child.key, "status": child.status, "summary": child.summary, "labels": child.labels}
             for child in result["children"]
         ]
     else:

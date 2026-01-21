@@ -63,7 +63,7 @@ def handle_read_project(config: "Config", args) -> None:
     list_only = getattr(args, "list", False)
     if list_only:
         output = [
-            {"key": ticket.key, "status": ticket.status, "summary": ticket.summary}
+            {"key": ticket.key, "status": ticket.status, "summary": ticket.summary, "labels": ticket.labels}
             for ticket in tickets
         ]
     else:

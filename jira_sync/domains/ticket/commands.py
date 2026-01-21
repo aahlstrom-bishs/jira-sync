@@ -27,10 +27,17 @@ def handle_read_tickets(config: "Config", args) -> None:
     """
     Display multiple tickets as JSON.
 
-    Command: read:tickets <key1> <key2> ...
+    Command: read:tickets <key1> <key2> ... [--list]
     """
     tickets = fetch_tickets(args.keys, config)
-    output = [ticket.to_dict() for ticket in tickets]
+    list_only = getattr(args, "list", False)
+    if list_only:
+        output = [
+            {"key": ticket.key, "status": ticket.status, "summary": ticket.summary, "labels": ticket.labels}
+            for ticket in tickets
+        ]
+    else:
+        output = [ticket.to_dict() for ticket in tickets]
     print(json.dumps(output, indent=2, default=str))
 
 
@@ -177,6 +184,7 @@ COMMANDS = {
         "help": "Display multiple tickets as JSON",
         "args": [
             {"name": "keys", "nargs": "+", "help": "Ticket keys"},
+            {"name": "--list", "action": "store_true", "help": "Show only key, status, summary, and labels"},
         ],
     },
     "create:ticket": {
