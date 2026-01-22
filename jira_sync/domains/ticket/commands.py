@@ -179,11 +179,26 @@ COMMANDS = {
             {"name": "key", "help": "Ticket key (e.g., SR-1234)"},
         ],
     },
+    "read:issue": {
+        "handler": handle_read_ticket,
+        "help": "Display single issue as JSON (alias for read:ticket)",
+        "args": [
+            {"name": "key", "help": "Issue key (e.g., SR-1234)"},
+        ],
+    },
     "read:tickets": {
         "handler": handle_read_tickets,
         "help": "Display multiple tickets as JSON",
         "args": [
             {"name": "keys", "nargs": "+", "help": "Ticket keys"},
+            {"name": "--list", "action": "store_true", "help": "Show only key, status, summary, and labels"},
+        ],
+    },
+    "read:issues": {
+        "handler": handle_read_tickets,
+        "help": "Display multiple issues as JSON (alias for read:tickets)",
+        "args": [
+            {"name": "keys", "nargs": "+", "help": "Issue keys"},
             {"name": "--list", "action": "store_true", "help": "Show only key, status, summary, and labels"},
         ],
     },
