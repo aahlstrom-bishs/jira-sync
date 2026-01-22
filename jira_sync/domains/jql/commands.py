@@ -90,6 +90,8 @@ def handle_read_jql(config: "Config", args) -> None:
         assignee = user_arg
     else:
         assignee = config.get_default("jql", "user", "currentUser()")
+        if assignee and assignee.lower() in ("me", "current"):
+            assignee = "currentUser()"
         
     # Auto-append assignee filter
     if assignee:

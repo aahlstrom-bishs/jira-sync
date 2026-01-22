@@ -75,6 +75,8 @@ def handle_read_project(config: "Config", args) -> None:
         assignee = user_arg
     else:
         assignee = config.get_default("project", "user", "currentUser()")
+        if assignee and assignee.lower() in ("me", "current"):
+            assignee = "currentUser()"
 
     tickets = fetch_project_tickets(
         key,
