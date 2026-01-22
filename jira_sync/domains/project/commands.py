@@ -4,12 +4,39 @@ Project domain commands.
 Exports COMMANDS dict for CLI discovery.
 """
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .query import fetch_project_tickets
 
 if TYPE_CHECKING:
     from ...config import Config
+
+
+def _build_epilog(config: "Config") -> str:
+    """Build dynamic epilog showing current config values."""
+    project_key = config.get_default("project", "key", "(none)")
+    user = config.get_default("project", "user", "currentUser()")
+    max_results = config.get_default("jql", "max_results", 50)
+    excluded = config.get_default("jql", "excluded_statuses", [])
+
+    home_config = Path.home() / ".jira" / "config.json"
+    cwd_config = Path.cwd() / ".jira" / "config.json"
+
+    excluded_str = ", ".join(excluded) if excluded else "(none)"
+
+    return f"""Current defaults (from config):
+  key:           {project_key}  [defaults.project.key]
+  --user:        {user}  [defaults.project.user]
+  --limit:       {max_results}        [defaults.jql.max_results]
+  excluded:      {excluded_str}  [defaults.jql.excluded_statuses]
+
+Config files (in priority order):
+  Global:  {home_config}
+  Project: {cwd_config}
+
+To change defaults, edit the config file:
+  {{"defaults": {{"project": {{"key": "PROJ", "user": "me"}}}}}}"""
 
 
 def handle_read_project(config: "Config", args) -> None:
@@ -76,6 +103,7 @@ COMMANDS = {
     "read:project": {
         "handler": handle_read_project,
         "help": "Display project tickets as JSON",
+        "epilog": _build_epilog,
         "args": [
             {"name": "key", "nargs": "?", "help": "Project key (e.g., SR). Uses default if not provided."},
             {"name": "--status", "help": "Filter by status"},

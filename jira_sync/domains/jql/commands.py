@@ -4,12 +4,39 @@ JQL domain commands.
 Exports COMMANDS dict for CLI discovery.
 """
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .query import execute_jql
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ...config import Config
+
+
+def _build_epilog(config: "Config") -> str:
+    """Build dynamic epilog showing current config values."""
+    max_results = config.get_default("jql", "max_results", 50)
+    excluded = config.get_default("jql", "excluded_statuses", [])
+    user = config.get_default("jql", "user", "currentUser()")
+    saved_count = len(config.saved_queries)
+
+    home_config = Path.home() / ".jira" / "config.json"
+    cwd_config = Path.cwd() / ".jira" / "config.json"
+
+    excluded_str = ", ".join(excluded) if excluded else "(none)"
+
+    return f"""Current defaults (from config):
+  --limit:       {max_results}        [defaults.jql.max_results]
+  --user:        {user}  [defaults.jql.user]
+  excluded:      {excluded_str}  [defaults.jql.excluded_statuses]
+  saved queries: {saved_count} (use --list-saved to view)
+
+Config files (in priority order):
+  Global:  {home_config}
+  Project: {cwd_config}
+
+To change defaults, edit the config file:
+  {{"defaults": {{"jql": {{"max_results": 100, "user": "me"}}}}}}"""
 
 
 def handle_read_jql(config: "Config", args) -> None:
@@ -20,6 +47,20 @@ def handle_read_jql(config: "Config", args) -> None:
 
     The query can be either a JQL string or a saved query name from config.
     """
+    # Handle --list-saved flag
+    if getattr(args, "list_saved", False):
+        if not config.saved_queries:
+            print("No saved queries found.")
+        else:
+            for name, jql in config.saved_queries.items():
+                print(f"{name}: {jql}")
+        return
+
+    # Require query if not listing saved
+    if not args.query:
+        print("Error: query is required (or use --list-saved)")
+        return
+
     query = args.query
 
     # Check if query is a saved query name
@@ -82,11 +123,13 @@ COMMANDS = {
     "read:jql": {
         "handler": handle_read_jql,
         "help": "Execute JQL query and display results as JSON",
+        "epilog": _build_epilog,
         "args": [
-            {"name": "query", "help": "JQL query string or saved query name"},
+            {"name": "query", "nargs": "?", "help": "JQL query string or saved query name"},
             {"name": "--limit", "type": int, "help": "Max results (uses config default)"},
             {"name": "--include-all", "action": "store_true", "help": "Include all statuses (ignore excluded_statuses)"},
             {"name": "--list", "action": "store_true", "help": "Show only key, status, and summary"},
+            {"name": "--list-saved", "action": "store_true", "help": "List all saved queries"},
             {"name": "--save", "help": "Save query with this name for future use"},
             {"name": "--user", "help": "Filter by user ('me' = currentUser(), default: from config)"},
             {"name": "--all-users", "action": "store_true", "help": "Show issues for all users"},

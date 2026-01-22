@@ -49,12 +49,13 @@ def discover_commands() -> dict[str, dict]:
     return commands
 
 
-def build_parser(commands: dict) -> argparse.ArgumentParser:
+def build_parser(commands: dict, config: "Config" = None) -> argparse.ArgumentParser:
     """
     Build argument parser with all discovered commands.
 
     Args:
         commands: Dict of command configs
+        config: Optional config for dynamic epilog generation
 
     Returns:
         Configured ArgumentParser
@@ -74,10 +75,15 @@ def build_parser(commands: dict) -> argparse.ArgumentParser:
 
     # Register each command (sorted to group by action prefix)
     for name, cmd_config in sorted(commands.items()):
+        # Support callable epilogs that receive config
+        epilog = cmd_config.get("epilog")
+        if callable(epilog) and config:
+            epilog = epilog(config)
+
         subparser = subparsers.add_parser(
             name,
             help=cmd_config.get("help", ""),
-            epilog=cmd_config.get("epilog"),
+            epilog=epilog,
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
 
@@ -133,8 +139,15 @@ def main():
                 sys.argv[i] = aliases[arg]
             break
 
+    # Try to load config early for dynamic epilogs (best effort)
+    early_config = None
+    try:
+        early_config = Config.load()
+    except Exception:
+        pass
+
     # Build parser
-    parser = build_parser(commands)
+    parser = build_parser(commands, early_config)
     args = parser.parse_args()
 
     if not args.command:
