@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from .query import fetch_ticket, fetch_tickets
 from ...lib.jira_client import get_client
+from ...lib.input_helpers import resolve_text_input
 
 if TYPE_CHECKING:
     from ..config import Config
@@ -45,7 +46,7 @@ def handle_create_ticket(config: "Config", args) -> None:
     """
     Create a new ticket.
 
-    Command: create:ticket <project> <summary> [options]
+    Command: create:ticket <project> <summary> [description] [options]
     """
     conn = get_client(config)
 
@@ -55,8 +56,9 @@ def handle_create_ticket(config: "Config", args) -> None:
         "issuetype": {"name": args.type},
     }
 
-    if args.description:
-        fields["description"] = args.description
+    description = resolve_text_input(args, text_attr="description", file_attr="file")
+    if description:
+        fields["description"] = description
     if args.assignee:
         fields["assignee"] = {"name": args.assignee}
     if args.priority:
@@ -205,11 +207,27 @@ COMMANDS = {
     "create:ticket": {
         "handler": handle_create_ticket,
         "help": "Create a new ticket",
+        "epilog": """Tips:
+  Multi-line descriptions: Use heredoc syntax or --file flag
+    jira create:ticket PROJ "Summary" <<'EOF'
+    Description line 1
+    Description line 2
+    EOF
+
+    jira create:ticket PROJ "Summary" --file description.md
+
+    echo "Description" | jira create:ticket PROJ "Summary"
+
+  Formatting: Use Jira wiki syntax, not Markdown
+    *bold*           instead of **bold**
+    _italic_         instead of *italic*
+    {code}...{code}  instead of ```code blocks```""",
         "args": [
             {"name": "project", "help": "Project key (e.g., PROJ)"},
             {"name": "summary", "help": "Ticket summary/title"},
+            {"name": "description", "nargs": "?", "help": "Description (use - for stdin)"},
+            {"names": ["--file", "-f"], "help": "Read description from file"},
             {"name": "--type", "help": "Issue type", "default": "Task"},
-            {"name": "--description", "help": "Description", "default": ""},
             {"name": "--assignee", "help": "Assignee", "default": None},
             {"name": "--priority", "help": "Priority", "default": None},
             {"name": "--labels", "nargs": "*", "help": "Labels", "default": []},

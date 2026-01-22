@@ -9,23 +9,10 @@ from typing import TYPE_CHECKING
 
 from .query import fetch_comments
 from ...lib.jira_client import get_client
+from ...lib.input_helpers import resolve_text_input
 
 if TYPE_CHECKING:
     from ...config import Config
-
-
-def get_comment_body(args) -> str:
-    """Resolve comment body from args, file, or stdin."""
-    # File flag takes precedence
-    if getattr(args, 'file', None):
-        with open(args.file, 'r') as f:
-            return f.read().strip()
-
-    # Stdin: explicit '-' or piped input with no body
-    if args.body == '-' or (args.body is None and not sys.stdin.isatty()):
-        return sys.stdin.read().strip()
-
-    return args.body or ''
 
 
 def handle_read_comments(config: "Config", args) -> None:
@@ -41,7 +28,7 @@ def handle_read_comments(config: "Config", args) -> None:
 
 def handle_add_comment(config: "Config", args) -> None:
     """Add a comment to a ticket."""
-    body = get_comment_body(args)
+    body = resolve_text_input(args, text_attr="body", file_attr="file")
     if not body:
         print(json.dumps({"error": "No comment body provided"}, indent=2))
         sys.exit(1)
