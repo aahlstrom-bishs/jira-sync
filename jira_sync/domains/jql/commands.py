@@ -75,6 +75,7 @@ def handle_read_jql(config: "Config", args) -> None:
 
     max_results = getattr(args, "limit", None) or config.get_default("jql", "max_results", 50)
     include_all = getattr(args, "include_all", False)
+    raw_mode = getattr(args, "raw", False)
 
     # Get user filter
     all_users = getattr(args, "all_users", False)
@@ -93,15 +94,15 @@ def handle_read_jql(config: "Config", args) -> None:
         if assignee and assignee.lower() in ("me", "current"):
             assignee = "currentUser()"
         
-    # Auto-append assignee filter
-    if assignee:
+    # Auto-append assignee filter (skip in raw mode)
+    if not raw_mode and assignee:
         if assignee == "currentUser()":
             query = f"({query}) AND assignee = currentUser()"
         else:
             query = f'({query}) AND assignee = "{assignee}"'
 
-    # Auto-append excluded statuses unless --include-all
-    if not include_all:
+    # Auto-append excluded statuses unless --include-all or --raw
+    if not raw_mode and not include_all:
         exclusion = config.build_exclusion_clause()
         if exclusion:
             query = f"({query}) AND {exclusion}"
@@ -135,6 +136,7 @@ COMMANDS = {
             {"name": "--save", "help": "Save query with this name for future use"},
             {"name": "--user", "help": "Filter by user ('me' = currentUser(), default: from config)"},
             {"name": "--all-users", "action": "store_true", "help": "Show issues for all users"},
+            {"name": "--raw", "action": "store_true", "help": "Execute query exactly as written (no default filters)"},
         ],
     },
 }
