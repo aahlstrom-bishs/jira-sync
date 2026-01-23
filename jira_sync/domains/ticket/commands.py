@@ -103,6 +103,27 @@ def handle_add_label(config: "Config", args) -> None:
     }, indent=2, default=str))
 
 
+def handle_remove_label(config: "Config", args) -> None:
+    """
+    Remove a label from a ticket.
+
+    Command: remove:label <key> <label>
+    """
+    conn = get_client(config)
+    issue = conn.client.issue(args.key)
+    current = list(issue.fields.labels) if issue.fields.labels else []
+
+    if args.label in current:
+        current.remove(args.label)
+        issue.update(fields={"labels": current})
+
+    print(json.dumps({
+        "success": True,
+        "key": args.key,
+        "labels": current,
+    }, indent=2, default=str))
+
+
 def handle_add_link(config: "Config", args) -> None:
     """
     Link two tickets.
@@ -292,6 +313,14 @@ COMMANDS = {
         "args": [
             {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
             {"name": "label", "help": "Label to add"},
+        ],
+    },
+    "remove:label": {
+        "handler": handle_remove_label,
+        "help": "Remove a label from a ticket",
+        "args": [
+            {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
+            {"name": "label", "help": "Label to remove"},
         ],
     },
     "add:link": {
