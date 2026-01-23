@@ -59,11 +59,11 @@ def handle_create_ticket(config: "Config", args) -> None:
     description = resolve_text_input(args, text_attr="description", file_attr="file")
     if description:
         fields["description"] = description
+    assignee = None
     if args.assignee:
         assignee = args.assignee
         if assignee.lower() in ("me", "current"):
             assignee = config.jira_email
-        fields["assignee"] = {"name": assignee}
     if args.priority:
         fields["priority"] = {"name": args.priority}
     if args.labels:
@@ -72,6 +72,8 @@ def handle_create_ticket(config: "Config", args) -> None:
         fields["parent"] = {"key": args.parent}
 
     issue = conn.client.create_issue(fields=fields)
+    if assignee:
+        conn.client.assign_issue(issue.key, assignee)
 
     print(json.dumps({
         "success": True,
