@@ -6,7 +6,6 @@ Exports COMMANDS dict for CLI discovery.
 import json
 from typing import TYPE_CHECKING
 
-from .query import fetch_transitions
 from ...lib.jira_client import get_client
 
 if TYPE_CHECKING:
@@ -19,8 +18,22 @@ def handle_read_transitions(config: "Config", args) -> None:
 
     Command: read:transitions <key>
     """
-    transitions = fetch_transitions(args.key, config)
-    output = [t.to_dict() for t in transitions]
+    conn = get_client(config)
+    issue = conn.client.issue(args.key)
+    transitions = conn.client.transitions(issue)
+
+    output = {
+        "key": args.key,
+        "current_status": issue.fields.status.name if issue.fields.status else None,
+        "transitions": [
+            {
+                "id": t["id"],
+                "name": t["name"],
+                "to_status": t.get("to", {}).get("name"),
+            }
+            for t in transitions
+        ],
+    }
     print(json.dumps(output, indent=2, default=str))
 
 
