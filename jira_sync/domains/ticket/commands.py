@@ -60,7 +60,10 @@ def handle_create_ticket(config: "Config", args) -> None:
     if description:
         fields["description"] = description
     if args.assignee:
-        fields["assignee"] = {"name": args.assignee}
+        assignee = args.assignee
+        if assignee.lower() in ("me", "current"):
+            assignee = config.jira_email
+        fields["assignee"] = {"name": assignee}
     if args.priority:
         fields["priority"] = {"name": args.priority}
     if args.labels:
@@ -126,7 +129,13 @@ def handle_set_assignee(config: "Config", args) -> None:
     """
     conn = get_client(config)
 
-    assignee = None if args.assignee.lower() == "none" else args.assignee
+    assignee_arg = args.assignee.lower()
+    if assignee_arg == "none":
+        assignee = None
+    elif assignee_arg in ("me", "current"):
+        assignee = config.jira_email
+    else:
+        assignee = args.assignee
     conn.client.assign_issue(args.key, assignee)
 
     print(json.dumps({
@@ -170,6 +179,47 @@ def handle_set_labels(config: "Config", args) -> None:
         "key": args.key,
         "labels": labels,
     }, indent=2))
+
+
+def handle_read_parent(config: "Config", args) -> None:
+    """
+    Read the parent of a ticket.
+
+    Command: read:parent <key>
+    """
+    conn = get_client(config)
+    issue = conn.client.issue(args.key)
+    fields = issue.fields
+
+    if hasattr(fields, "parent") and fields.parent:
+        result = {
+            "key": args.key,
+            "parent": {
+                "key": fields.parent.key,
+                "summary": getattr(fields.parent.fields, "summary", ""),
+            }
+        }
+    else:
+        result = {"key": args.key, "parent": None}
+
+    print(json.dumps(result, indent=2))
+
+
+def handle_set_parent(config: "Config", args) -> None:
+    """
+    Set or clear the parent of a ticket.
+
+    Command: set:parent <key> <parent>
+    """
+    conn = get_client(config)
+    issue = conn.client.issue(args.key)
+
+    if args.parent.lower() == "none":
+        issue.update(fields={"parent": None})
+        print(json.dumps({"success": True, "key": args.key, "parent": None}, indent=2))
+    else:
+        issue.update(fields={"parent": {"key": args.parent}})
+        print(json.dumps({"success": True, "key": args.key, "parent": args.parent}, indent=2))
 
 
 # Command registry for CLI discovery
@@ -273,6 +323,21 @@ COMMANDS = {
         "args": [
             {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
             {"name": "labels", "nargs": "*", "help": "Labels (space-separated, empty to clear)"},
+        ],
+    },
+    "read:parent": {
+        "handler": handle_read_parent,
+        "help": "Read the parent of a ticket",
+        "args": [
+            {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
+        ],
+    },
+    "set:parent": {
+        "handler": handle_set_parent,
+        "help": "Set or clear the parent of a ticket",
+        "args": [
+            {"name": "key", "help": "Ticket key (e.g., PROJ-123)"},
+            {"name": "parent", "help": "Parent ticket key, or 'none' to clear"},
         ],
     },
 }
