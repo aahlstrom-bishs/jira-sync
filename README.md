@@ -13,6 +13,13 @@ For development:
 pip install -e .
 ```
 
+### Updating
+
+To update to the latest version:
+```bash
+pip install --force-reinstall git+https://github.com/aahlstrom-bishs/jira-sync
+```
+
 ## Example - Finding Tickets
 
 ``` bash
